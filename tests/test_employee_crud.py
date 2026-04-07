@@ -106,3 +106,29 @@ def test_create_employee_missing_fields(client):
         "full_name": "Incomplete",
     })
     assert response.status_code == 422
+
+
+def test_create_employee_empty_name(client):
+    response = client.post("/employees", json={
+        "full_name": "",
+        "job_title": "Developer",
+        "country": "India",
+        "salary": 50000.0,
+    })
+    assert response.status_code == 422
+
+
+def test_create_employee_negative_salary(client):
+    response = client.post("/employees", json={
+        "full_name": "Negative Ned",
+        "job_title": "Developer",
+        "country": "India",
+        "salary": -5000.0,
+    })
+    assert response.status_code == 422
+
+
+def test_list_employees_empty(client):
+    response = client.get("/employees")
+    assert response.status_code == 200
+    assert response.json() == []
