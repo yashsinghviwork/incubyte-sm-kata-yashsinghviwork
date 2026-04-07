@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 
 class EmployeeCreate(BaseModel):
@@ -6,6 +6,20 @@ class EmployeeCreate(BaseModel):
     job_title: str
     country: str
     salary: float
+
+    @field_validator("full_name", "job_title", "country")
+    @classmethod
+    def must_not_be_empty(cls, v: str) -> str:
+        if not v.strip():
+            raise ValueError("must not be empty")
+        return v
+
+    @field_validator("salary")
+    @classmethod
+    def salary_must_be_non_negative(cls, v: float) -> float:
+        if v < 0:
+            raise ValueError("must not be negative")
+        return v
 
 
 class EmployeeResponse(BaseModel):
