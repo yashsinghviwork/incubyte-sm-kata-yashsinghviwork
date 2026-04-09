@@ -31,6 +31,6 @@ def calculate_salary(
     gross = gross_salary if gross_salary is not None else employee.salary
     rules = DEDUCTION_RULES.get(employee.country, {})
     deductions = {name: round(gross * rate, 2) for name, rate in rules.items()}
-    net = gross - sum(deductions.values())
+    net = round(gross - sum(deductions.values()), 2)
 
     return SalaryResponse(gross_salary=gross, deductions=deductions, net_salary=net)

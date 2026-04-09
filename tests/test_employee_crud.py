@@ -153,6 +153,32 @@ def test_patch_employee_not_found(client):
     assert response.status_code == 404
 
 
+def test_patch_employee_empty_name(client):
+    create = client.post("/employees", json={
+        "full_name": "Valid Name",
+        "job_title": "Tester",
+        "country": "India",
+        "salary": 40000.0,
+    })
+    emp_id = create.json()["id"]
+
+    response = client.patch(f"/employees/{emp_id}", json={"full_name": ""})
+    assert response.status_code == 422
+
+
+def test_patch_employee_negative_salary(client):
+    create = client.post("/employees", json={
+        "full_name": "Valid Name",
+        "job_title": "Tester",
+        "country": "India",
+        "salary": 40000.0,
+    })
+    emp_id = create.json()["id"]
+
+    response = client.patch(f"/employees/{emp_id}", json={"salary": -100.0})
+    assert response.status_code == 422
+
+
 def test_list_employees_empty(client):
     response = client.get("/employees")
     assert response.status_code == 200
