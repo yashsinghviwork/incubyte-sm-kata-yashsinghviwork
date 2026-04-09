@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models import Employee
-from app.schemas import EmployeeCreate, EmployeeResponse
+from app.schemas import EmployeeCreate, EmployeePatch, EmployeeResponse
 
 router = APIRouter(prefix="/employees", tags=["employees"])
 
@@ -40,6 +40,18 @@ def update_employee(
 ):
     db_employee = _get_employee_or_404(employee_id, db)
     for key, value in employee.model_dump().items():
+        setattr(db_employee, key, value)
+    db.commit()
+    db.refresh(db_employee)
+    return db_employee
+
+
+@router.patch("/{employee_id}", response_model=EmployeeResponse)
+def patch_employee(
+    employee_id: int, updates: EmployeePatch, db: Session = Depends(get_db)
+):
+    db_employee = _get_employee_or_404(employee_id, db)
+    for key, value in updates.model_dump(exclude_unset=True).items():
         setattr(db_employee, key, value)
     db.commit()
     db.refresh(db_employee)

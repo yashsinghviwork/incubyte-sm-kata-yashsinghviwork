@@ -1,7 +1,7 @@
 [project]
 name = "incubyte-sm-kata-yashsinghviwork"
 version = "0.1.0"
-description = "Add your description here"
+description = "FastAPI salary management API with employee CRUD, tax deductions, and salary metrics"
 requires-python = ">=3.12"
 dependencies = [
     "fastapi>=0.135.3",

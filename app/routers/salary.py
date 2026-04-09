@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -16,10 +16,14 @@ DEDUCTION_RULES = {
 @router.get(
     "/employees/{employee_id}/salary", response_model=SalaryResponse
 )
-def calculate_salary(employee_id: int, db: Session = Depends(get_db)):
+def calculate_salary(
+    employee_id: int,
+    gross_salary: float | None = Query(None),
+    db: Session = Depends(get_db),
+):
     employee = _get_employee_or_404(employee_id, db)
 
-    gross = employee.salary
+    gross = gross_salary if gross_salary is not None else employee.salary
     rules = DEDUCTION_RULES.get(employee.country, {})
     deductions = {name: round(gross * rate, 2) for name, rate in rules.items()}
     net = gross - sum(deductions.values())
