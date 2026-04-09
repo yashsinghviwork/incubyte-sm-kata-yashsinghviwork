@@ -7,7 +7,7 @@ def test_salary_calculation_india(client):
     })
     emp_id = create.json()["id"]
 
-    response = client.get(f"/employees/{emp_id}/salary")
+    response = client.get(f"/employees/{emp_id}/salary", params={"gross_salary": 100000.0})
     assert response.status_code == 200
     data = response.json()
     assert data["gross_salary"] == 100000.0
@@ -24,7 +24,7 @@ def test_salary_calculation_us(client):
     })
     emp_id = create.json()["id"]
 
-    response = client.get(f"/employees/{emp_id}/salary")
+    response = client.get(f"/employees/{emp_id}/salary", params={"gross_salary": 100000.0})
     assert response.status_code == 200
     data = response.json()
     assert data["gross_salary"] == 100000.0
@@ -41,7 +41,7 @@ def test_salary_calculation_other_country(client):
     })
     emp_id = create.json()["id"]
 
-    response = client.get(f"/employees/{emp_id}/salary")
+    response = client.get(f"/employees/{emp_id}/salary", params={"gross_salary": 80000.0})
     assert response.status_code == 200
     data = response.json()
     assert data["deductions"] == {}
@@ -49,7 +49,7 @@ def test_salary_calculation_other_country(client):
 
 
 def test_salary_calculation_not_found(client):
-    response = client.get("/employees/9999/salary")
+    response = client.get("/employees/9999/salary", params={"gross_salary": 50000.0})
     assert response.status_code == 404
 
 
@@ -62,9 +62,42 @@ def test_salary_calculation_zero_salary(client):
     })
     emp_id = create.json()["id"]
 
-    response = client.get(f"/employees/{emp_id}/salary")
+    response = client.get(f"/employees/{emp_id}/salary", params={"gross_salary": 0.0})
     assert response.status_code == 200
     data = response.json()
     assert data["gross_salary"] == 0.0
     assert data["deductions"]["TDS"] == 0.0
     assert data["net_salary"] == 0.0
+
+
+def test_salary_calculation_custom_gross(client):
+    create = client.post("/employees", json={
+        "full_name": "Bonus Bob",
+        "job_title": "Developer",
+        "country": "India",
+        "salary": 50000.0,
+    })
+    emp_id = create.json()["id"]
+
+    response = client.get(f"/employees/{emp_id}/salary", params={"gross_salary": 200000.0})
+    assert response.status_code == 200
+    data = response.json()
+    assert data["gross_salary"] == 200000.0
+    assert data["deductions"]["TDS"] == 20000.0
+    assert data["net_salary"] == 180000.0
+
+
+def test_salary_calculation_defaults_to_stored_salary(client):
+    create = client.post("/employees", json={
+        "full_name": "Default Dan",
+        "job_title": "Developer",
+        "country": "India",
+        "salary": 60000.0,
+    })
+    emp_id = create.json()["id"]
+
+    response = client.get(f"/employees/{emp_id}/salary")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["gross_salary"] == 60000.0
+    assert data["net_salary"] == 54000.0
