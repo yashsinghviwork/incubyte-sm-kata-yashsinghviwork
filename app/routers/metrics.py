@@ -9,10 +9,16 @@ from app.schemas import SalaryMetricsResponse
 router = APIRouter(prefix="/metrics", tags=["metrics"])
 
 
-@router.get("/salary", response_model=SalaryMetricsResponse)
+@router.get(
+    "/salary",
+    response_model=SalaryMetricsResponse,
+    summary="Get salary statistics",
+    description="Returns min, max, and average salary filtered by country, job title, or both. "
+    "At least one filter is required.",
+)
 def salary_metrics(
-    country: str | None = Query(None),
-    job_title: str | None = Query(None),
+    country: str | None = Query(None, description="Filter by country"),
+    job_title: str | None = Query(None, description="Filter by job title"),
     db: Session = Depends(get_db),
 ):
     if not country and not job_title:

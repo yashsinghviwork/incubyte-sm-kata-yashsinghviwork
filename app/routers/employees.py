@@ -15,7 +15,10 @@ def _get_employee_or_404(employee_id: int, db: Session) -> Employee:
     return employee
 
 
-@router.post("", response_model=EmployeeResponse, status_code=201)
+@router.post(
+    "", response_model=EmployeeResponse, status_code=201,
+    summary="Create a new employee",
+)
 def create_employee(employee: EmployeeCreate, db: Session = Depends(get_db)):
     db_employee = Employee(**employee.model_dump())
     db.add(db_employee)
@@ -24,17 +27,26 @@ def create_employee(employee: EmployeeCreate, db: Session = Depends(get_db)):
     return db_employee
 
 
-@router.get("", response_model=list[EmployeeResponse])
+@router.get(
+    "", response_model=list[EmployeeResponse],
+    summary="List all employees",
+)
 def list_employees(db: Session = Depends(get_db)):
     return db.query(Employee).all()
 
 
-@router.get("/{employee_id}", response_model=EmployeeResponse)
+@router.get(
+    "/{employee_id}", response_model=EmployeeResponse,
+    summary="Get an employee by ID",
+)
 def get_employee(employee_id: int, db: Session = Depends(get_db)):
     return _get_employee_or_404(employee_id, db)
 
 
-@router.put("/{employee_id}", response_model=EmployeeResponse)
+@router.put(
+    "/{employee_id}", response_model=EmployeeResponse,
+    summary="Full update of an employee",
+)
 def update_employee(
     employee_id: int, employee: EmployeeCreate, db: Session = Depends(get_db)
 ):
@@ -46,7 +58,10 @@ def update_employee(
     return db_employee
 
 
-@router.patch("/{employee_id}", response_model=EmployeeResponse)
+@router.patch(
+    "/{employee_id}", response_model=EmployeeResponse,
+    summary="Partial update of an employee",
+)
 def patch_employee(
     employee_id: int, updates: EmployeePatch, db: Session = Depends(get_db)
 ):
@@ -58,7 +73,10 @@ def patch_employee(
     return db_employee
 
 
-@router.delete("/{employee_id}")
+@router.delete(
+    "/{employee_id}",
+    summary="Delete an employee",
+)
 def delete_employee(employee_id: int, db: Session = Depends(get_db)):
     employee = _get_employee_or_404(employee_id, db)
     db.delete(employee)

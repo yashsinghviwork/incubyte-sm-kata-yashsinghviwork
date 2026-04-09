@@ -8,6 +8,8 @@ A FastAPI-based REST API for managing employee records, calculating salaries wit
 - **Salary Calculation** — Compute net salary with country-specific tax deductions (India 10% TDS, US 12% TDS), accepts optional gross salary override
 - **Salary Metrics** — Min/max/average salary filtered by country, job title, or both
 - **Input Validation** — Rejects empty fields and negative salaries at the schema level
+- **Health Check** — `GET /health` for liveness probes
+- **OpenAPI Docs** — Auto-generated at `/docs` with endpoint descriptions
 
 ## Tech Stack
 
@@ -17,6 +19,8 @@ A FastAPI-based REST API for managing employee records, calculating salaries wit
 - Pydantic v2 (validation)
 - pytest + Starlette TestClient (testing)
 - uv (package manager)
+- Docker (containerization)
+- GitHub Actions (CI)
 
 ## Setup
 
@@ -30,6 +34,13 @@ uv sync
 uv run uvicorn app.main:app --reload
 ```
 
+## Running with Docker
+
+```bash
+docker build -t salary-api .
+docker run -p 8000:8000 salary-api
+```
+
 ## Running Tests
 
 ```bash
@@ -40,14 +51,35 @@ uv run pytest tests/ -v
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
+| GET | `/health` | Health check |
 | POST | `/employees` | Create employee |
 | GET | `/employees` | List all employees |
 | GET | `/employees/{id}` | Get employee by ID |
-| PUT | `/employees/{id}` | Full update |
-| PATCH | `/employees/{id}` | Partial update |
+| PUT | `/employees/{id}` | Full update (all fields required) |
+| PATCH | `/employees/{id}` | Partial update (only changed fields) |
 | DELETE | `/employees/{id}` | Delete employee |
 | GET | `/employees/{id}/salary?gross_salary=` | Calculate net salary (optional gross override) |
-| GET | `/metrics/salary?country=&job_title=` | Salary min/max/avg |
+| GET | `/metrics/salary?country=&job_title=` | Salary min/max/avg (at least one filter required) |
+
+## Project Structure
+
+```
+app/
+  main.py          # FastAPI app, lifespan, router registration
+  database.py      # SQLAlchemy engine, session, Base
+  models.py        # Employee ORM model
+  schemas.py       # Pydantic request/response schemas
+  routers/
+    employees.py   # CRUD endpoints
+    salary.py      # Salary calculation endpoint
+    metrics.py     # Salary metrics endpoint
+tests/
+  conftest.py      # Test client fixture with in-memory SQLite
+  test_employee_crud.py
+  test_salary_calculation.py
+  test_salary_metrics.py
+  test_health.py
+```
 
 ## TDD Approach
 
@@ -57,7 +89,7 @@ This project follows strict Test-Driven Development:
 2. **Green** — Implement minimal code to pass
 3. **Refactor** — Clean up while keeping tests green
 
-Commit history reflects each TDD cycle with incremental commits.
+Each TDD cycle is captured in the commit history with incremental commits.
 
 ## Implementation Details
 
@@ -68,8 +100,10 @@ Commit history reflects each TDD cycle with incremental commits.
   - **Implementation** — Endpoint code, SQLAlchemy models, and Pydantic schemas were generated from the test expectations, then reviewed for correctness
   - **Refactoring** — Prompted to split monolithic main.py into routers, extract helpers, and modernize to mapped_column; verified tests stayed green after each change
   - **Edge cases** — Asked for validation edge cases (empty strings, negative salary, zero salary, combined filters); generated failing tests first, then minimal validation code
+  - **Production polish** — Dockerfile, GitHub Actions CI, OpenAPI descriptions, and health endpoint were added to demonstrate deployment readiness
 - **Trade-offs made with AI:**
   - Accepted AI-suggested project layout (app/routers/, schemas, models, database separation) as it follows standard FastAPI conventions
   - Manually reviewed all generated code before committing to ensure it matched kata requirements exactly (e.g., deduction rules, metric calculations)
   - Chose sync endpoints over async since SQLite with synchronous SQLAlchemy doesn't benefit from async and keeps the code simpler
   - Used Starlette TestClient (sync) instead of httpx AsyncClient to keep tests straightforward
+  - Kept Dockerfile minimal (no multi-stage build) since the app is lightweight and doesn't need a compile step

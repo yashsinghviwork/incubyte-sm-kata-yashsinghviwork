@@ -14,11 +14,16 @@ DEDUCTION_RULES = {
 
 
 @router.get(
-    "/employees/{employee_id}/salary", response_model=SalaryResponse
+    "/employees/{employee_id}/salary",
+    response_model=SalaryResponse,
+    summary="Calculate net salary with deductions",
+    description="Calculates deductions and net salary for an employee. "
+    "Pass gross_salary to override the stored salary, otherwise the employee's salary on record is used. "
+    "Deduction rules: India 10% TDS, United States 12% TDS, all others no deductions.",
 )
 def calculate_salary(
     employee_id: int,
-    gross_salary: float | None = Query(None),
+    gross_salary: float | None = Query(None, description="Override gross salary for calculation"),
     db: Session = Depends(get_db),
 ):
     employee = _get_employee_or_404(employee_id, db)
